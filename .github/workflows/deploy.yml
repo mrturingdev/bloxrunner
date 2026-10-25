@@ -13,18 +13,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      SSH_HOST: ${{ secrets.SSH_HOST }}
-      SSH_USER: ${{ secrets.SSH_USER }}
-      SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+      CPANEL_PORT: ${{ secrets.CPANEL_PORT || '2083' }}
+      CPANEL_USER: ${{ secrets.CPANEL_USER }}
+      CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+      CPANEL_REPO: ${{ secrets.CPANEL_REPO }}
     steps:
-      - uses: actions/checkout@v4
-
       - name: Check configuration
         run: |
           missing=""
-          for v in SSH_HOST SSH_USER SSH_PRIVATE_KEY DEPLOY_PATH; do
+          for v in CPANEL_HOST CPANEL_USER CPANEL_TOKEN CPANEL_REPO; do
             [ -n "${!v}" ] || missing="$missing $v"
           done
           if [ -n "$missing" ]; then
@@ -32,22 +30,19 @@ jobs:
             exit 1
           fi
 
-      - name: Set up SSH
+      - name: Trigger cPanel deployment
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_deploy
-          chmod 600 ~/.ssh/id_deploy
-          echo "resolved: $(getent hosts "$SSH_HOST" | tr '\n' ' ' || echo NONE)"
-          timeout 10 bash -c "</dev/tcp/$SSH_HOST/$SSH_PORT" 2>/dev/null && echo "tcp $SSH_PORT: open" || echo "tcp $SSH_PORT: blocked from this runner"
-          ssh-keyscan -T 10 -p "$SSH_PORT" -H "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null
-          if [ ! -s ~/.ssh/known_hosts ]; then
-            echo "::error::Cannot fingerprint port $SSH_PORT — host unreachable or blocked"
+          url="https://$CPANEL_HOST:$CPANEL_PORT/execute/VersionControlDeployment/create?repository_root=$CPANEL_REPO"
+          resp=$(curl -sS --max-time 180 -w '\n%{http_code}' \
+            -H "Authorization: cpanel $CPANEL_USER:$CPANEL_TOKEN" "$url")
+          code=$(printf '%s' "$resp" | tail -n1)
+          body=$(printf '%s' "$resp" | sed '$d')
+          printf '%s' "$body" | jq -c '{status, errors, deploy_id: .data.deploy_id, log_path: .data.log_path}'
+          if [ "$code" != "200" ]; then
+            echo "::error::cPanel API returned HTTP $code"
             exit 1
           fi
-
-      - name: Deploy
-        run: |
-          SSH_OPTS="-i ~/.ssh/id_deploy -p $SSH_PORT -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
-          ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" "mkdir -p '$DEPLOY_PATH'"
-          rsync -az --exclude=.git --exclude=.github -e "ssh $SSH_OPTS" \
-            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH"
+          if [ "$(printf '%s' "$body" | jq -r '.status')" != "1" ]; then
+            echo "::error::Deployment rejected — see errors above"
+            exit 1
+          fi

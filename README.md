@@ -48,15 +48,15 @@ Static site, no build step. Publish with cPanel's built-in Git Version Control:
 `admin/` is published too; add `--exclude=admin` to the rsync line if it should stay private.
 No Git Version Control in your plan? Use an FTP deploy action (e.g. `SamKirkland/FTP-Deploy-Action`) with FTP credentials from cPanel > FTP Accounts instead.
 
-### Alternative: GitHub Actions
-`.github/workflows/deploy.yml` rsyncs the site over SSH on every push to `main`. Repository secrets:
+### Alternative: GitHub Actions via cPanel API
+Inbound SSH from CI is blocked by this host (TCP 22 opens, no SSH banner), so `.github/workflows/deploy.yml` deploys over HTTPS instead: it asks cPanel to run the repo's deployment. Repository secrets:
 
 | Secret | Value |
 |---|---|
-| `SSH_PRIVATE_KEY` | private deploy key; its `.pub` goes in the server's `~/.ssh/authorized_keys` |
-| `SSH_HOST` | cPanel server hostname or shared IP |
-| `SSH_USER` | cPanel username |
-| `SSH_PORT` | optional, defaults to 22 |
-| `DEPLOY_PATH` | `/home/<user>/bloxrunner.mrturingdev.com/` |
+| `CPANEL_HOST` | server hostname or domain (e.g. `mrturingdev.com`) |
+| `CPANEL_USER` | cPanel username |
+| `CPANEL_TOKEN` | API token: cPanel > Security > **Manage API Tokens** > Create |
+| `CPANEL_REPO` | `/home/<user>/repositories/bloxrunner` (Repository Path from Git Version Control) |
+| `CPANEL_PORT` | optional, defaults to `2083` |
 
-Use either this or cPanel's automatic deployment, not both.
+Requires the repository to already exist in cPanel's Git Version Control. The job queues `VersionControlDeployment/create`; the deploy log is server-side at the returned `log_path`.
