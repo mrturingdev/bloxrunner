@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=$HOME/bloxrunner.mrturingdev.com/
+    - rsync -a --exclude=.git ./. "$DEPLOYPATH"

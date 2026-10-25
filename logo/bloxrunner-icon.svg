@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="140 0 720 720" width="720" height="720">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b1b4d"/><stop offset=".55" stop-color="#8a3a64"/><stop offset="1" stop-color="#e0566b"/></linearGradient>
+<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb347" stop-opacity=".55"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+<clipPath id="disc"><circle cx="500" cy="360" r="300"/></clipPath>
+</defs>
+<rect x="140" y="0" width="720" height="720" rx="140" fill="#1c1233"/>
+<g clip-path="url(#disc)">
+<rect x="200" y="60" width="600" height="600" fill="url(#sky)"/>
+<g fill="#fff4e0"><circle cx="300" cy="150" r="3"/><circle cx="380" cy="110" r="2.5"/><circle cx="640" cy="140" r="3"/><circle cx="720" cy="215" r="2.5"/><circle cx="270" cy="235" r="2"/><circle cx="560" cy="95" r="2"/></g>
+<circle cx="500" cy="330" r="210" fill="url(#glow)"/>
+<circle cx="500" cy="330" r="120" fill="#ffb347"/>
+<path d="M180 470 Q330 360 470 440 T820 420 V700 H180Z" fill="#8a2f5c"/>
+<path d="M180 520 Q360 420 540 458 Q690 488 820 440 V700 H180Z" fill="#4a1d54"/>
+<g stroke="#ffb347" stroke-linecap="round" stroke-width="6" opacity=".85"><path d="M215 380H305"/><path d="M240 410H335"/><path d="M200 440H270"/></g>
+<g fill="#fff4e0">
+<rect x="0" y="0" width="20" height="50" transform="translate(505 415) rotate(40)" fill="#e8d4b4"/>
+<rect x="0" y="0" width="20" height="50" transform="translate(535 415) rotate(-22)"/>
+</g>
+<g transform="rotate(8 536 417)">
+<rect x="468" y="360" width="40" height="14" fill="#e0566b"/>
+<rect x="432" y="352" width="36" height="12" fill="#e0566b"/>
+<rect x="505" y="335" width="62" height="82" fill="#fff4e0"/>
+<rect x="505" y="335" width="14" height="82" fill="#e8d4b4"/>
+<rect x="545" y="353" width="12" height="12" fill="#1c1233"/>
+</g>
+</g>
+<circle cx="500" cy="360" r="300" fill="none" stroke="#ffb347" stroke-width="10"/>
+</svg>

@@ -1,0 +1,28 @@
+:root{
+  --sky1:#2b1b4d;--sky2:#e0566b;--sun:#ffb347;--ground:#1c1233;--ink:#fff4e0;--hit:#ff4d6d;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;background:var(--ground);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",sans-serif;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#wrap{position:relative;height:100%;display:flex;align-items:center;justify-content:center}
+canvas{width:100%;max-width:900px;max-height:100%;aspect-ratio:2/1;display:block;background:var(--sky1)}
+#ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:16px}
+#ui h1{font-size:clamp(32px,8vw,64px);margin:0 0 8px;letter-spacing:1px}
+#ui p{margin:4px 0;font-size:clamp(14px,3.5vw,20px);max-width:32ch;line-height:1.4}
+#ui.hide{display:none}
+button{font:inherit;color:var(--ink);cursor:pointer}
+#shopBtn{pointer-events:auto;margin-top:10px;padding:10px 20px;border-radius:999px;border:2px solid var(--sun);background:rgba(28,18,51,.8);font-size:clamp(14px,3.5vw,18px)}
+#shop{position:absolute;inset:0;display:none;flex-direction:column;background:rgba(28,18,51,.97);padding:16px;box-sizing:border-box;z-index:5}
+#shop.open{display:flex}
+#shop header{display:flex;justify-content:space-between;align-items:center;max-width:700px;width:100%;margin:0 auto 10px}
+#shop h2{margin:0;font-size:24px}
+#bal{color:var(--sun);font-weight:bold;font-size:20px}
+#cards{flex:1;overflow-y:auto;max-width:700px;width:100%;margin:0 auto;display:grid;gap:10px;align-content:start}
+.card{display:flex;align-items:center;gap:12px;padding:10px 12px;border:2px solid #4a1d54;border-radius:12px;background:#2b1b4d}
+.card.on{border-color:var(--sun)}
+.sw{width:34px;height:46px;border-radius:6px;flex:none;position:relative;margin-left:8px}
+.sw i{position:absolute;left:-8px;top:8px;width:12px;height:6px}
+.card .t{flex:1}.card b{display:block}.card small{opacity:.8}
+.card button{padding:8px 14px;border-radius:8px;border:0;background:var(--sun);color:#1c1233;font-weight:bold}
+.card button:disabled{opacity:.4;cursor:default}
+#back{max-width:700px;width:100%;margin:10px auto 0;padding:12px;border-radius:10px;border:2px solid var(--sun);background:none}

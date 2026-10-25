@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bloxrunner</title>
+<link rel="icon" href="../logo/bloxrunner-icon.svg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="wrap">
+  <div id="stage"><canvas id="gl"></canvas><canvas id="c" width="900" height="450"></canvas></div>
+  <div id="ui">
+    <h1 id="title">Bloxrunner</h1>
+    <p id="msg">Tap, click or press Space to jump. Hold for a higher jump, and tap again in mid-air to double jump. Skins with a power get a button (or press E) that recharges in 90 seconds. Duck with the down arrow. Grab ⚡ to smash through obstacles and ⏳ to slow time.</p>
+    <p id="wal"></p>
+    <div id="menu">
+      <button id="playBtn" class="big">▶ Play</button>
+      <button id="shopBtn">🛒 Skin shop</button>
+      <button id="ownedBtn">🎽 My skins</button>
+      <button id="setBtn">⚙ Settings</button>
+    </div>
+  </div>
+  <button id="power" aria-label="Use skin power"></button>
+  <button id="mute" aria-label="Toggle sound">🔊</button>
+  <div id="settings"><header><h2>Settings</h2></header><div id="setBody"></div><button id="setBack">Back</button></div>
+  <div id="shop"><header><h2 id="shopTitle">Skin shop</h2><span id="bal"></span></header><div id="cards"></div><button id="back">Back</button></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
