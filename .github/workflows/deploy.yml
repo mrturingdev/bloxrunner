@@ -37,9 +37,11 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
+          echo "resolved: $(getent hosts "$SSH_HOST" | tr '\n' ' ' || echo NONE)"
+          timeout 10 bash -c "</dev/tcp/$SSH_HOST/$SSH_PORT" 2>/dev/null && echo "tcp $SSH_PORT: open" || echo "tcp $SSH_PORT: blocked from this runner"
           ssh-keyscan -T 10 -p "$SSH_PORT" -H "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null
           if [ ! -s ~/.ssh/known_hosts ]; then
-            echo "::error::Cannot fingerprint $SSH_HOST:$SSH_PORT — host unreachable or blocked"
+            echo "::error::Cannot fingerprint port $SSH_PORT — host unreachable or blocked"
             exit 1
           fi
 
