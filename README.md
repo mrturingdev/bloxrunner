@@ -42,7 +42,7 @@ The 3D and admin versions load three.js r128 from cdnjs.cloudflare.com, so they 
 Static site, no build step. Publish with cPanel's built-in Git Version Control:
 
 1. `.cpanel.yml` deploys to `$HOME/bloxrunner.mrturingdev.com/` — the subdomain's document root.
-2. cPanel > **Git Version Control** > **Create**: clone `https://<github-user>:<PAT>@github.com/mrturingdev/bloxrunner.git` (PAT = fine-grained token with read access to this private repo).
+2. cPanel > **Git Version Control** > **Create**: clone `https://github.com/mrturingdev/bloxrunner.git` (public repo, no credentials needed).
 3. Tick **Automatic Deployment**, then **Update from Remote** once. Every push to `main` now redeploys to the subdomain.
 
 `admin/` is published too; add `--exclude=admin` to the rsync line if it should stay private.
