@@ -1,6 +1,8 @@
 ---
 deployment:
   tasks:
+    - /bin/chmod 755 "$HOME/repositories" "$HOME/repositories/bloxrunner"
+    - /bin/chmod -R a+rX "$HOME/repositories/bloxrunner"
     - export DEPLOYPATH=$HOME/bloxrunner.mrturingdev.com/
     - /bin/mkdir -p "$DEPLOYPATH"
     - /bin/rm -f "$DEPLOYPATH/index.html"
