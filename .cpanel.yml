@@ -2,5 +2,6 @@
 deployment:
   tasks:
     - export DEPLOYPATH=$HOME/bloxrunner.mrturingdev.com/
-    - mkdir -p "$DEPLOYPATH"
-    - if [ "$(cd . && pwd -P)" != "$(cd "$DEPLOYPATH" && pwd -P)" ]; then rsync -a --delete --exclude=.git --exclude=.github --exclude=.cpanel.yml --exclude=README.md --exclude=.well-known --exclude=cgi-bin ./. "$DEPLOYPATH"; fi
+    - /bin/mkdir -p "$DEPLOYPATH"
+    - /bin/rm -f "$DEPLOYPATH/index.html"
+    - /bin/cp -Rf .htaccess index.php launchgame.html logo 2d 3d admin "$DEPLOYPATH"

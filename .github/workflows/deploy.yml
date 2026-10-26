@@ -38,17 +38,18 @@ jobs:
 
           # 1. Discover domain documentroot and existing git repositories on cPanel
           domains=$(curl -sS --max-time 60 -H "$auth" "$base/DomainInfo/domains_data")
+          printf '%s' "$domains" | jq -c '[ .data.main_domain, (.data.sub_domains // [])[], (.data.addon_domains // [])[] ] | map(select(. != null) | {domain, documentroot: (.documentroot | split("/") | join(" / "))})'
           docroot=$(printf '%s' "$domains" | jq -r '
             [ .data.main_domain, (.data.sub_domains // [])[], (.data.addon_domains // [])[] ]
             | map(select(. != null and (.domain | ascii_downcase | contains("bloxrunner"))))
             | .[0].documentroot // empty
           ')
-          echo "Detected bloxrunner documentroot: ${docroot:-<none>}"
 
           repos=$(curl -sS --max-time 60 -H "$auth" "$base/VersionControl/retrieve")
+          printf '%s' "$repos" | jq -c '(.data // []) | map({name, branch, repository_root: (.repository_root | split("/") | join(" / "))})'
           repo_root=$(printf '%s' "$repos" | jq -r --arg cfg "$CPANEL_REPO" --arg doc "$docroot" '
             (.data // [])
-            | (map(select(.repository_root == $cfg))
+            | (map(select(.repository_root == $cfg or .repository_root == ("/" + $cfg)))
               + map(select($doc != "" and .repository_root == $doc))
               + map(select((.repository_root | ascii_downcase | contains("bloxrunner")) or (.name // "" | ascii_downcase | contains("bloxrunner")))))
             | .[0].repository_root // empty
@@ -56,8 +57,7 @@ jobs:
 
           # 2. If no repo exists yet in cPanel Git Version Control, create/clone it
           if [ -z "$repo_root" ]; then
-            target="${docroot:-/home/$CPANEL_USER/bloxrunner.mrturingdev.com}"
-            echo "No existing cPanel Git repo found; creating at $target"
+            target="/home/$CPANEL_USER/repositories/bloxrunner"
             src=$(jq -nc --arg url "$REPO_URL" '{"remote_name":"origin","url":$url}')
             create_resp=$(curl -sS --max-time 180 -G -H "$auth" "$base/VersionControl/create" \
               --data-urlencode "type=git" \
@@ -65,27 +65,13 @@ jobs:
               --data-urlencode "repository_root=$target" \
               --data-urlencode "branch=main" \
               --data-urlencode "source_repository=$src")
-            printf '%s\n' "$create_resp" | jq -c '{status, errors, repository_root: .data.repository_root}'
-            if [ "$(printf '%s' "$create_resp" | jq -r '.status')" = "1" ]; then
-              repo_root="$target"
-            else
-              fallback="/home/$CPANEL_USER/repositories/bloxrunner"
-              echo "Retrying repo creation at $fallback"
-              create_resp=$(curl -sS --max-time 180 -G -H "$auth" "$base/VersionControl/create" \
-                --data-urlencode "type=git" \
-                --data-urlencode "name=bloxrunner" \
-                --data-urlencode "repository_root=$fallback" \
-                --data-urlencode "branch=main" \
-                --data-urlencode "source_repository=$src")
-              printf '%s\n' "$create_resp" | jq -c '{status, errors, repository_root: .data.repository_root}'
-              if [ "$(printf '%s' "$create_resp" | jq -r '.status')" != "1" ]; then
-                echo "::error::Failed to find or create cPanel Git repository"
-                exit 1
-              fi
-              repo_root="$fallback"
+            printf '%s\n' "$create_resp" | jq -c '{status, errors}'
+            if [ "$(printf '%s' "$create_resp" | jq -r '.status')" != "1" ]; then
+              echo "::error::Failed to find or create cPanel Git repository"
+              exit 1
             fi
+            repo_root="$target"
           fi
-          echo "Using repository_root: $repo_root"
 
           # 3. Pull latest commits from origin/main
           upd_resp=$(curl -sS --max-time 180 -G -H "$auth" "$base/VersionControl/update" \
@@ -104,4 +90,14 @@ jobs:
           if [ "$(printf '%s' "$dep_resp" | jq -r '.status')" != "1" ]; then
             echo "::error::VersionControlDeployment/create failed"
             exit 1
+          fi
+
+          log_path=$(printf '%s' "$dep_resp" | jq -r '.data.log_path // empty')
+          if [ -n "$log_path" ]; then
+            sleep 3
+            log_dir=$(dirname "$log_path")
+            log_file=$(basename "$log_path")
+            curl -sS --max-time 30 -G -H "$auth" "$base/Fileman/get_file_content" \
+              --data-urlencode "dir=$log_dir" \
+              --data-urlencode "file=$log_file" | jq -r '.data.content // empty'
           fi
