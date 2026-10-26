@@ -1,2 +1,2 @@
-DirectoryIndex index.php
+DirectoryIndex index.php index.html launchgame.html
 RedirectMatch 404 /\.(git|github|cpanel\.yml)

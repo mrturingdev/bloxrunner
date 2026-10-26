@@ -1,3 +1,3 @@
 <?php
-header('Location: 3d/');
+header('Location: 3d/index.html');
 exit;
