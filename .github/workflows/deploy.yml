@@ -38,7 +38,6 @@ jobs:
 
           # 1. Discover domain documentroot and existing git repositories on cPanel
           domains=$(curl -sS --max-time 60 -H "$auth" "$base/DomainInfo/domains_data")
-          printf '%s' "$domains" | jq -c '[ .data.main_domain, (.data.sub_domains // [])[], (.data.addon_domains // [])[] ] | map(select(. != null) | {domain, documentroot: (.documentroot | split("/") | join(" / "))})'
           docroot=$(printf '%s' "$domains" | jq -r '
             [ .data.main_domain, (.data.sub_domains // [])[], (.data.addon_domains // [])[] ]
             | map(select(. != null and (.domain | ascii_downcase | contains("bloxrunner"))))
@@ -46,7 +45,6 @@ jobs:
           ')
 
           repos=$(curl -sS --max-time 60 -H "$auth" "$base/VersionControl/retrieve")
-          printf '%s' "$repos" | jq -c '(.data // []) | map({name, branch, repository_root: (.repository_root | split("/") | join(" / "))})'
           repo_root=$(printf '%s' "$repos" | jq -r --arg cfg "$CPANEL_REPO" --arg doc "$docroot" '
             (.data // [])
             | (map(select(.repository_root == $cfg or .repository_root == ("/" + $cfg)))
