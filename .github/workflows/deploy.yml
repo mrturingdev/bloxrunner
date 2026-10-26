@@ -18,11 +18,12 @@ jobs:
       CPANEL_USER: ${{ secrets.CPANEL_USER }}
       CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
       CPANEL_REPO: ${{ secrets.CPANEL_REPO }}
+      REPO_URL: https://github.com/${{ github.repository }}.git
     steps:
       - name: Check configuration
         run: |
           missing=""
-          for v in CPANEL_HOST CPANEL_USER CPANEL_TOKEN CPANEL_REPO; do
+          for v in CPANEL_HOST CPANEL_USER CPANEL_TOKEN; do
             [ -n "${!v}" ] || missing="$missing $v"
           done
           if [ -n "$missing" ]; then
@@ -30,19 +31,77 @@ jobs:
             exit 1
           fi
 
-      - name: Trigger cPanel deployment
+      - name: Sync and deploy on cPanel
         run: |
-          url="https://$CPANEL_HOST:$CPANEL_PORT/execute/VersionControlDeployment/create?repository_root=$CPANEL_REPO"
-          resp=$(curl -sS --max-time 180 -w '\n%{http_code}' \
-            -H "Authorization: cpanel $CPANEL_USER:$CPANEL_TOKEN" "$url")
-          code=$(printf '%s' "$resp" | tail -n1)
-          body=$(printf '%s' "$resp" | sed '$d')
-          printf '%s' "$body" | jq -c '{status, errors, deploy_id: .data.deploy_id, log_path: .data.log_path}'
-          if [ "$code" != "200" ]; then
-            echo "::error::cPanel API returned HTTP $code"
+          base="https://$CPANEL_HOST:$CPANEL_PORT/execute"
+          auth="Authorization: cpanel $CPANEL_USER:$CPANEL_TOKEN"
+
+          # 1. Discover domain documentroot and existing git repositories on cPanel
+          domains=$(curl -sS --max-time 60 -H "$auth" "$base/DomainInfo/domains_data")
+          docroot=$(printf '%s' "$domains" | jq -r '
+            [ .data.main_domain, (.data.sub_domains // [])[], (.data.addon_domains // [])[] ]
+            | map(select(. != null and (.domain | ascii_downcase | contains("bloxrunner"))))
+            | .[0].documentroot // empty
+          ')
+          echo "Detected bloxrunner documentroot: ${docroot:-<none>}"
+
+          repos=$(curl -sS --max-time 60 -H "$auth" "$base/VersionControl/retrieve")
+          repo_root=$(printf '%s' "$repos" | jq -r --arg cfg "$CPANEL_REPO" --arg doc "$docroot" '
+            (.data // [])
+            | (map(select(.repository_root == $cfg))
+              + map(select($doc != "" and .repository_root == $doc))
+              + map(select((.repository_root | ascii_downcase | contains("bloxrunner")) or (.name // "" | ascii_downcase | contains("bloxrunner")))))
+            | .[0].repository_root // empty
+          ')
+
+          # 2. If no repo exists yet in cPanel Git Version Control, create/clone it
+          if [ -z "$repo_root" ]; then
+            target="${docroot:-/home/$CPANEL_USER/bloxrunner.mrturingdev.com}"
+            echo "No existing cPanel Git repo found; creating at $target"
+            src=$(jq -nc --arg url "$REPO_URL" '{"remote_name":"origin","url":$url}')
+            create_resp=$(curl -sS --max-time 180 -G -H "$auth" "$base/VersionControl/create" \
+              --data-urlencode "type=git" \
+              --data-urlencode "name=bloxrunner" \
+              --data-urlencode "repository_root=$target" \
+              --data-urlencode "branch=main" \
+              --data-urlencode "source_repository=$src")
+            printf '%s\n' "$create_resp" | jq -c '{status, errors, repository_root: .data.repository_root}'
+            if [ "$(printf '%s' "$create_resp" | jq -r '.status')" = "1" ]; then
+              repo_root="$target"
+            else
+              fallback="/home/$CPANEL_USER/repositories/bloxrunner"
+              echo "Retrying repo creation at $fallback"
+              create_resp=$(curl -sS --max-time 180 -G -H "$auth" "$base/VersionControl/create" \
+                --data-urlencode "type=git" \
+                --data-urlencode "name=bloxrunner" \
+                --data-urlencode "repository_root=$fallback" \
+                --data-urlencode "branch=main" \
+                --data-urlencode "source_repository=$src")
+              printf '%s\n' "$create_resp" | jq -c '{status, errors, repository_root: .data.repository_root}'
+              if [ "$(printf '%s' "$create_resp" | jq -r '.status')" != "1" ]; then
+                echo "::error::Failed to find or create cPanel Git repository"
+                exit 1
+              fi
+              repo_root="$fallback"
+            fi
+          fi
+          echo "Using repository_root: $repo_root"
+
+          # 3. Pull latest commits from origin/main
+          upd_resp=$(curl -sS --max-time 180 -G -H "$auth" "$base/VersionControl/update" \
+            --data-urlencode "repository_root=$repo_root" \
+            --data-urlencode "branch=main")
+          printf '%s\n' "$upd_resp" | jq -c '{status, errors, branch: .data.branch, last_update: .data.last_update}'
+          if [ "$(printf '%s' "$upd_resp" | jq -r '.status')" != "1" ]; then
+            echo "::error::VersionControl/update failed"
             exit 1
           fi
-          if [ "$(printf '%s' "$body" | jq -r '.status')" != "1" ]; then
-            echo "::error::Deployment rejected — see errors above"
+
+          # 4. Run .cpanel.yml deployment tasks
+          dep_resp=$(curl -sS --max-time 180 -G -H "$auth" "$base/VersionControlDeployment/create" \
+            --data-urlencode "repository_root=$repo_root")
+          printf '%s\n' "$dep_resp" | jq -c '{status, errors, deploy_id: .data.deploy_id, log_path: .data.log_path}'
+          if [ "$(printf '%s' "$dep_resp" | jq -r '.status')" != "1" ]; then
+            echo "::error::VersionControlDeployment/create failed"
             exit 1
           fi
