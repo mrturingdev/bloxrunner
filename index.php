@@ -1,1 +1,3 @@
-<?php require __DIR__ . '/launchgame.html';
+<?php
+header('Location: 3d/');
+exit;
