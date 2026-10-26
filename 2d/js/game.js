@@ -25,12 +25,14 @@ function reset(){
   coinsList=[];runCoins=0;nextCoin=2;inv=0;
   {const k=SK();lives=k.lives;boost=k.boost;slow=k.slow}
   Object.assign(P,{y:GY,vy:0,ducking:false,onGround:true,holdJump:false});
+  const br=document.getElementById('brand')||document.getElementById('logo');if(br&&state==='ready'){br.style.display='flex';title.style.display='none'}
 }
 function start(){reset();state='play';ui.classList.add('hide')}
 function die(){
   state='over';shake=0.3;
   const s=Math.floor(score);
   if(s>best){best=s;try{localStorage.setItem('dunedash-best',best)}catch(e){}}
+  const br=document.getElementById('brand')||document.getElementById('logo');if(br)br.style.display='none';title.style.display='block';
   title.textContent='Game over';
   persist();msg.textContent='Coins +'+runCoins+'  ·  Score '+s+'  ·  Best '+best+'. Tap to run again.';
   ui.classList.remove('hide');

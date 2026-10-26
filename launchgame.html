@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bloxrunner</title><link rel="icon" href="logo/bloxrunner-icon.svg">
-<style>body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#1c1233;color:#fff4e0;font-family:"Trebuchet MS","Segoe UI",sans-serif;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-sizing:border-box}
-img{width:min(360px,80vw);max-height:32dvh;object-fit:contain;height:auto}
+<style>body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#1c1233;color:#fff4e0;font-family:"Trebuchet MS","Segoe UI",sans-serif;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-sizing:border-box}
+.brand{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:4px;text-align:center}
+img{width:min(340px,78vw);max-height:28dvh;object-fit:contain;height:auto}
+.slogan{margin:0;font-size:clamp(14px,3.8vw,18px);font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#ffb347}
+.byline{margin:0;font-size:clamp(12px,3vw,14px);color:#ffd23f;opacity:.95;font-weight:600;letter-spacing:.5px}
 a{display:block;width:min(260px,85vw);box-sizing:border-box;padding:14px;text-align:center;border:2px solid #ffb347;border-radius:14px;color:#fff4e0;text-decoration:none;font-size:clamp(15px,4vw,18px)}
 a:first-of-type{background:#ffb347;color:#1c1233;font-weight:bold}small{opacity:.7;text-align:center;max-width:36ch}</style></head>
-<body><img src="logo/bloxrunner-logo.png" alt="Bloxrunner">
+<body>
+<div class="brand">
+  <img src="logo/bloxrunner-logo.png" alt="Bloxrunner">
+  <p class="slogan">Run. Jump. Survive.</p>
+  <p class="byline">by Pranav Maharjan</p>
+</div>
 <a href="3d/index.html">Play 3D version</a><a href="2d/index.html">Play 2D version (original)</a><a href="admin/index.html">Admin / test build (3D)</a>
 <small>The 3D versions load three.js from the internet.</small></body></html>

@@ -28,14 +28,14 @@ function reset(){
   coinsList=[];runCoins=0;nextCoin=2;inv=0;bendT=0;bendNext=7;dayT=.4;spdMul=1;wx='normal';wxWant='normal';wxI=0;wxNext=20;sx=0;sv=0;ltnWarn=0;ltnNext=6;ltnFlash=0;dodgeMsg=0;lastLv=1;wxForce='';wxNewMsg=0;slipT=0;dodgePost=0;pgx=0;
   {const k=SK();lives=k.lives;powerCd=0} // lives come with the skin; its power is activated by the player
   Object.assign(P,{y:GY,vy:0,ducking:false,onGround:true,holdJump:false});
-  const l=document.getElementById('logo');if(l&&state==='ready'){l.style.display='block';title.style.display='none'}
+  const br=document.getElementById('brand')||document.getElementById('logo');if(br&&state==='ready'){br.style.display='flex';title.style.display='none'}
 }
 function start(){reset();state='play';ui.classList.add('hide');musicOn()}
 function die(){
   state='over';shake=0.3;sfx('die');musicOff();bendT=0;ltnWarn=0;wxWant='normal';wxNext=20;
   const s=Math.floor(score);
   if(s>best){best=s;try{localStorage.setItem('dunedash-admin-best',best)}catch(e){}}
-  const l=document.getElementById('logo');if(l)l.style.display='none';title.style.display='block';
+  const br=document.getElementById('brand')||document.getElementById('logo');if(br)br.style.display='none';title.style.display='block';
   title.textContent='Game over';playBtn.textContent='▶ Play again';refreshMenu();
   persist();msg.textContent='Coins +'+runCoins+'  ·  Score '+s+'  ·  Best '+best+'. Tap to run again.';
   ui.classList.remove('hide');
