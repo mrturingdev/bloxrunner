@@ -1,1 +1,1 @@
-<?php readfile(__DIR__ . '/launchgame.html');
+<?php require __DIR__ . '/launchgame.html';

@@ -1,0 +1,4 @@
+Options -Indexes
+DirectoryIndex index.php launchgame.html index.html
+AddDefaultCharset UTF-8
+AddType image/svg+xml .svg
