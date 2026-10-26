@@ -4,7 +4,8 @@ An endless runner: sprint across the dunes, dodge obstacles, collect coins, unlo
 
 ```
 bloxrunner/
-├── index.html        launcher page
+├── index.php         PHP entrypoint
+├── launchgame.html   launcher page
 ├── README.md
 ├── logo/             logo and icon (PNG + SVG)
 ├── 2d/               original 2D version (canvas only, works offline)
@@ -14,7 +15,7 @@ bloxrunner/
 ```
 
 ## Run it
-Open `index.html` in a browser. There is no build step.
+Open `launchgame.html` in a browser (or serve `index.php`). There is no build step.
 The 3D and admin versions load three.js r128 from cdnjs.cloudflare.com, so they need an internet connection.
 
 ## Controls

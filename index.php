@@ -1,1 +1,1 @@
-<?php readfile(__DIR__ . '/index.html');
+<?php readfile(__DIR__ . '/launchgame.html');
