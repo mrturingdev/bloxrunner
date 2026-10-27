@@ -50,7 +50,7 @@ function die(){
   for(let i=0;i<20;i++)parts.push({x:P.x,y:P.y-27,vx:(Math.random()-.5)*500,vy:-Math.random()*500,l:1});
 }
 function jump(){
-  if(shopEl.classList.contains('open')||setEl.classList.contains('open'))return;
+  if(shopEl.classList.contains('open')||setEl.classList.contains('open')||boardEl.classList.contains('open'))return;
   audioInit();
   if(state!=='play'){ if(state==='ready'||state==='over'){ if(state==='over'&&t<0)return; start(); } return;}
   if(ltnWarn>0)ltnDodged=true; // any tap during a lightning warning dodges the bolt
@@ -719,6 +719,22 @@ function shopCall(b,action,skin){
 const shopBtn=document.getElementById('shopBtn');
 shopBtn.addEventListener('pointerdown',e=>e.stopPropagation());
 shopBtn.onclick=()=>{shopBtn.blur();shopMode='shop';renderShop();shopEl.classList.add('open')};
+const boardEl=document.getElementById('board'),rowsEl=document.getElementById('rows'),boardBtn=document.getElementById('boardBtn');
+function boardRow(r,me){const d=document.createElement('div');d.className='card'+(me?' on':'');
+  [['rk','#'+r.rank],['nm',r.name],['',r.best_score],['','L'+r.best_level]].forEach(([c,t],i)=>{const e=document.createElement(i==2?'b':i==3?'small':'span');e.className=c;e.textContent=t;d.appendChild(e)});rowsEl.appendChild(d)}
+function renderBoard(){
+  const note=t=>{rowsEl.innerHTML='';const p=document.createElement('p');p.textContent=t;rowsEl.appendChild(p)};
+  note('Loading...');
+  api('leaderboard').then(r=>{
+    if(!boardEl.classList.contains('open'))return;
+    if(!r.top.length)return note('No scores yet. Be the first!');
+    rowsEl.innerHTML='';r.top.forEach(x=>boardRow(x,pname&&x.name.toLowerCase()===pname.toLowerCase()));
+    if(r.me&&!r.top.some(x=>x.rank===r.me.rank)){const p=document.createElement('p');p.textContent='...';rowsEl.appendChild(p);boardRow(r.me,true)}
+  },()=>boardEl.classList.contains('open')&&note("Can't load the leaderboard."));
+}
+boardBtn.addEventListener('pointerdown',e=>e.stopPropagation());
+boardBtn.onclick=()=>{boardBtn.blur();boardEl.classList.add('open');renderBoard()};
+document.getElementById('boardBack').onclick=e=>{e.currentTarget.blur();boardEl.classList.remove('open')};
 document.getElementById('back').onclick=e=>{e.currentTarget.blur();shopEl.classList.remove('open')};
 let last=performance.now();
 function loop(now){

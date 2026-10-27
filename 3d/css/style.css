@@ -16,14 +16,16 @@ html,body{width:100%;height:100%;height:100dvh;margin:0;background:var(--ground)
 #ui.hide{display:none}
 button{font:inherit;color:var(--ink);cursor:pointer}
 #shopBtn{pointer-events:auto;margin-top:10px;padding:10px 20px;border-radius:999px;border:2px solid var(--sun);background:rgba(28,18,51,.8);font-size:clamp(14px,3.5vw,18px)}
-#shop,#settings{position:absolute;inset:0;display:none;flex-direction:column;background:rgba(28,18,51,.97);padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));box-sizing:border-box;z-index:5}
-#shop.open,#settings.open{display:flex}
-#shop header,#settings header{display:flex;justify-content:space-between;align-items:center;max-width:700px;width:100%;margin:0 auto 10px}
-#shop h2,#settings h2{margin:0;font-size:clamp(20px,5vw,24px)}
+#shop,#settings,#board{position:absolute;inset:0;display:none;flex-direction:column;background:rgba(28,18,51,.97);padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));box-sizing:border-box;z-index:5}
+#shop.open,#settings.open,#board.open{display:flex}
+#shop header,#settings header,#board header{display:flex;justify-content:space-between;align-items:center;max-width:700px;width:100%;margin:0 auto 10px}
+#shop h2,#settings h2,#board h2{margin:0;font-size:clamp(20px,5vw,24px)}
 #bal{color:var(--sun);font-weight:bold;font-size:clamp(16px,4.5vw,20px)}
-#cards{flex:1;overflow-y:auto;max-width:700px;width:100%;margin:0 auto;display:grid;gap:10px;align-content:start}
+#cards,#rows{flex:1;overflow-y:auto;max-width:700px;width:100%;margin:0 auto;display:grid;gap:10px;align-content:start}
 .card{display:flex;align-items:center;gap:12px;padding:10px 12px;border:2px solid #4a1d54;border-radius:12px;background:#2b1b4d}
 .card.on{border-color:var(--sun)}
+.card .rk{width:2.4em;flex:none;color:var(--sun);font-weight:bold}.card .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rows p{margin:6px 0;text-align:center;opacity:.8}
 .sw{width:34px;height:46px;border-radius:6px;flex:none;position:relative;margin-left:8px}
 .sw i{position:absolute;left:-8px;top:8px;width:12px;height:6px}
 .card .t{flex:1;min-width:0}.card b{display:block}.card small{opacity:.8}
@@ -84,5 +86,5 @@ button{font:inherit;color:var(--ink);cursor:pointer}
 #power small{font-size:12px;opacity:.9}
 #power.rdy{box-shadow:0 0 14px 3px rgba(255,210,63,.7)}
 #mute{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:6;width:42px;height:42px;border-radius:50%;border:2px solid var(--sun);background:rgba(28,18,51,.8);font-size:20px;padding:0}
-#back,#setBack{max-width:700px;width:100%;margin:10px auto 0;padding:12px;border-radius:10px;border:2px solid var(--sun);background:none}
-#wrap:has(#shop.open,#settings.open) #mute{display:none} /* it would sit on top of the Back button */
+#back,#setBack,#boardBack{max-width:700px;width:100%;margin:10px auto 0;padding:12px;border-radius:10px;border:2px solid var(--sun);background:none}
+#wrap:has(#shop.open,#settings.open,#board.open) #mute{display:none} /* it would sit on top of the Back button */
