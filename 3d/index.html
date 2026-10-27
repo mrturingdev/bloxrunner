@@ -9,24 +9,25 @@
 </head>
 <body>
 <div id="wrap">
-  <div id="stage"><canvas id="gl"></canvas><canvas id="c" width="900" height="450"></canvas></div>
-  <div id="ui">
-    <div class="brand" id="brand">
-      <img src="../logo/bloxrunner-logo.png" id="logo" alt="Bloxrunner">
-      <p class="slogan">Run. Jump. Survive.</p>
-      <p class="byline">by Pranav Maharjan</p>
-    </div>
-    <h1 id="title" style="display:none">Bloxrunner</h1>
-    <p id="msg">Tap, click or press Space to jump. Hold for a higher jump, and tap again in mid-air to double jump. Skins with a power get a button (or press E) that recharges in 90 seconds. Duck with the down arrow. Grab ⚡ to smash through obstacles and ⏳ to slow time.</p>
-    <p id="wal"></p>
-    <div id="nameRow"><input id="nameIn" maxlength="16" placeholder="Pick a player name" autocomplete="off"><button id="nameBtn">Save name</button></div><p id="nameErr"></p>
-    <div id="menu">
-      <button id="playBtn" class="big">▶ Play</button>
-      <button id="shopBtn">🛒 Skin shop</button>
-      <button id="ownedBtn">🎽 My skins</button>
-      <button id="boardBtn">🏆 Leaderboard</button>
-      <button id="setBtn">⚙ Settings</button>
-      <a href="../launchgame.html" id="launcherBtn" class="menu-link">🕹️ Other versions</a>
+  <div id="stage"><canvas id="gl"></canvas><canvas id="c" width="900" height="450"></canvas>
+    <div id="ui">
+      <div class="brand" id="brand">
+        <img src="../logo/bloxrunner-logo.png" id="logo" alt="Bloxrunner">
+        <p class="slogan">Run. Jump. Survive.</p>
+        <p class="byline">by Pranav Maharjan</p>
+      </div>
+      <h1 id="title" style="display:none">Bloxrunner</h1>
+      <p id="msg">Tap, click or press Space to jump. Hold for a higher jump, and tap again in mid-air to double jump. Skins with a power get a button (or press E) that recharges in 90 seconds. Duck with the down arrow. Grab ⚡ to smash through obstacles and ⏳ to slow time.</p>
+      <p id="wal"></p>
+      <div id="nameRow"><input id="nameIn" aria-label="Player name" maxlength="16" placeholder="Pick a player name" autocomplete="off"><button id="nameBtn">Save name</button></div><p id="nameErr"></p>
+      <div id="menu">
+        <button id="playBtn" class="big">▶ Play</button>
+        <button id="shopBtn">🛒 Skin shop</button>
+        <button id="ownedBtn">🎽 My skins</button>
+        <button id="boardBtn">🏆 Leaderboard</button>
+        <button id="setBtn">⚙ Settings</button>
+        <a href="../launchgame.html" id="launcherBtn" class="menu-link">🕹️ Other versions</a>
+      </div>
     </div>
   </div>
   <button id="power" aria-label="Use skin power"></button>

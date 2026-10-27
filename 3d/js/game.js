@@ -591,7 +591,7 @@ function renderSettings(){
   row('Sound effects',tb(cfg.sfx?'On':'Off',cfg.sfx,()=>{cfg.sfx=!cfg.sfx;saveCfg();renderSettings()}));
   row('Display',tb('Window',cfg.mode==='win',()=>setMode('win')),tb('Portrait fullscreen',cfg.mode==='port',()=>setMode('port')),tb('Landscape fullscreen',cfg.mode==='land',()=>setMode('land')));
 }
-function refreshMenu(){document.getElementById('wal').textContent=pname?'\u25cf '+save.coins+' coins  \u00b7  skin: '+SK().name+'  \u00b7  '+pname:offline?"Offline - progress won't be saved.":token?'':'Pick a name to save coins, skins and scores.'}
+function refreshMenu(){document.getElementById('wal').textContent=pname?'\u25cf '+save.coins+' coins  \u00b7  skin: '+SK().name+'\n'+pname:offline?"Offline - progress won't be saved.":token?'':'Pick a name to save coins, skins and scores.'}
 const nameRow=document.getElementById('nameRow'),nameIn=document.getElementById('nameIn'),nameBtn=document.getElementById('nameBtn'),nameErr=document.getElementById('nameErr');
 function showName(on){nameRow.style.display=on?'':'none';if(!on)nameErr.textContent=''}
 function saveName(){
@@ -602,6 +602,7 @@ function saveName(){
 }
 ['keydown','keyup'].forEach(k=>nameIn.addEventListener(k,e=>{e.stopPropagation();if(k==='keydown'&&e.key==='Enter')saveName()})); // typing a name must not jump, mute or fire powers
 nameBtn.onclick=()=>{nameBtn.blur();saveName()};
+['keydown','keyup'].forEach(k=>nameBtn.addEventListener(k,e=>e.stopPropagation())); // Space/Enter on the focused button clicks it, not start a run
 showName(!token);
 if(token)api('me').then(r=>applyPlayer(r.player),e=>{if(e.message==='unauthorized'){token='';try{localStorage.removeItem('bloxrunner-token')}catch(x){}showName(true)}else offline=true;refreshMenu()});
 function fit(){
@@ -609,7 +610,8 @@ function fit(){
     const dm=detectMode();
     if(cfg.mode!==dm){cfg.mode=dm;applyMode();if(setEl.classList.contains('open'))renderSettings()}
   }
-  const h=wrapEl.clientHeight||innerHeight,w=wrapEl.clientWidth||innerWidth;
+  const h=stage.clientHeight||innerHeight,w=stage.clientWidth||innerWidth; // the menu lives on the stage, so size it by the stage
+  wrapEl.style.setProperty('--uh',h+'px');
   wrapEl.classList.toggle('short',h<520);wrapEl.classList.toggle('mid',h>=520&&h<960);
   wrapEl.classList.toggle('narrow',w<480);
 }
@@ -721,7 +723,7 @@ shopBtn.addEventListener('pointerdown',e=>e.stopPropagation());
 shopBtn.onclick=()=>{shopBtn.blur();shopMode='shop';renderShop();shopEl.classList.add('open')};
 const boardEl=document.getElementById('board'),rowsEl=document.getElementById('rows'),boardBtn=document.getElementById('boardBtn');
 function boardRow(r,me){const d=document.createElement('div');d.className='card'+(me?' on':'');
-  [['rk','#'+r.rank],['nm',r.name],['',r.best_score],['','L'+r.best_level]].forEach(([c,t],i)=>{const e=document.createElement(i==2?'b':i==3?'small':'span');e.className=c;e.textContent=t;d.appendChild(e)});rowsEl.appendChild(d)}
+  [['rk','#'+r.rank],['nm',r.name],['',r.best_score],['lv','L'+r.best_level]].forEach(([c,t],i)=>{const e=document.createElement(i==2?'b':i==3?'small':'span');e.className=c;e.textContent=t;d.appendChild(e)});rowsEl.appendChild(d)}
 function renderBoard(){
   const note=t=>{rowsEl.innerHTML='';const p=document.createElement('p');p.textContent=t;rowsEl.appendChild(p)};
   note('Loading...');
@@ -729,7 +731,7 @@ function renderBoard(){
     if(!boardEl.classList.contains('open'))return;
     if(!r.top.length)return note('No scores yet. Be the first!');
     rowsEl.innerHTML='';r.top.forEach(x=>boardRow(x,pname&&x.name.toLowerCase()===pname.toLowerCase()));
-    if(r.me&&!r.top.some(x=>x.rank===r.me.rank)){const p=document.createElement('p');p.textContent='...';rowsEl.appendChild(p);boardRow(r.me,true)}
+    if(r.me&&!r.top.some(x=>x.name.toLowerCase()===r.me.name.toLowerCase())){const p=document.createElement('p');p.textContent='...';rowsEl.appendChild(p);boardRow(r.me,true)}
   },()=>boardEl.classList.contains('open')&&note("Can't load the leaderboard."));
 }
 boardBtn.addEventListener('pointerdown',e=>e.stopPropagation());
