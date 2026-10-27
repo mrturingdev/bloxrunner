@@ -47,27 +47,32 @@ expect('me bad token', req('GET', 'me', null, str_repeat('0', 64)), 401, 'unauth
 expect('run_start no token', req('POST', 'run_start'), 401, 'unauthorized');
 expect('buy no token', req('POST', 'buy', ['skin' => 'ember']), 401, 'unauthorized');
 
-// runs
+// runs (age() backdates started_at via PDO instead of sleeping)
+$pdo = new PDO("sqlite:$db"); $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+function age($run, $secs) { global $pdo; $pdo->prepare('UPDATE runs SET started_at = ? WHERE id = ?')->execute([microtime(true) - $secs, $run]); }
 $r = req('POST', 'run_start', null, $tokA); expect('run_start', $r, 200); $run = $r[1]['run_id'];
 check('run id 32 hex', preg_match('/^[0-9a-f]{32}$/', $run) === 1);
 foreach ([['score' => '10', 'coins' => 4], ['score' => 10, 'coins' => 4.5], ['score' => -1, 'coins' => 0], ['score' => 10], ['run_id' => $run, 'score' => 10, 'coins' => '4']] as $i => $b)
   expect("run_finish bad fields #$i", req('POST', 'run_finish', $b + ['run_id' => $run], $tokA), 400, 'bad_request');
 expect('run_finish unknown run', req('POST', 'run_finish', ['run_id' => 'deadbeef', 'score' => 1, 'coins' => 0], $tokA), 404, 'run_not_found');
 expect('run_finish other player', req('POST', 'run_finish', ['run_id' => $run, 'score' => 1, 'coins' => 0], $tokB), 404, 'run_not_found');
-$r = req('POST', 'run_finish', ['run_id' => $run, 'score' => 10, 'coins' => 4], $tokA); expect('run_finish ok', $r, 200);
-check('wallet + best updated', $r[1]['player']['coins'] === 4 && $r[1]['player']['best_score'] === 10 && $r[1]['player']['best_level'] === 1 && $r[1]['rank'] === 1);
+age($run, 5); $r = req('POST', 'run_finish', ['run_id' => $run, 'score' => 97, 'coins' => 4], $tokA); expect('run_finish boost-shaped score at 5s', $r, 200);
+check('wallet + best updated', $r[1]['player']['coins'] === 4 && $r[1]['player']['best_score'] === 97 && $r[1]['player']['best_level'] === 1 && $r[1]['rank'] === 1);
 expect('run_finish twice', req('POST', 'run_finish', ['run_id' => $run, 'score' => 1, 'coins' => 0], $tokA), 409, 'run_finished');
-$run = req('POST', 'run_start', null, $tokA)[1]['run_id'];
-expect('run_finish implausible', req('POST', 'run_finish', ['run_id' => $run, 'score' => 5000, 'coins' => 0], $tokA), 422, 'implausible_run');
+$run = req('POST', 'run_start', null, $tokA)[1]['run_id']; age($run, 5);
+expect('run_finish over score cap at 5s', req('POST', 'run_finish', ['run_id' => $run, 'score' => 160, 'coins' => 0], $tokA), 422, 'implausible_run');
 expect('implausible run is closed', req('POST', 'run_finish', ['run_id' => $run, 'score' => 1, 'coins' => 0], $tokA), 409, 'run_finished');
 $run = req('POST', 'run_start', null, $tokA)[1]['run_id'];
-expect('implausible coins', req('POST', 'run_finish', ['run_id' => $run, 'score' => 1, 'coins' => 500], $tokA), 422, 'implausible_run');
+expect('instant finish with nothing', req('POST', 'run_finish', ['run_id' => $run, 'score' => 0, 'coins' => 0], $tokA), 200);
 $run = req('POST', 'run_start', null, $tokA)[1]['run_id'];
+expect('instant finish with a coin', req('POST', 'run_finish', ['run_id' => $run, 'score' => 0, 'coins' => 1], $tokA), 422, 'implausible_run');
+$run = req('POST', 'run_start', null, $tokA)[1]['run_id']; age($run, 5);
+expect('implausible coins', req('POST', 'run_finish', ['run_id' => $run, 'score' => 1, 'coins' => 500], $tokA), 422, 'implausible_run');
+$run = req('POST', 'run_start', null, $tokA)[1]['run_id']; age($run, 5);
 $r = req('POST', 'run_finish', ['run_id' => $run, 'score' => 3, 'coins' => 1], $tokA);
-check('best score keeps max, coins accumulate', $r[1]['player']['best_score'] === 10 && $r[1]['player']['coins'] === 5);
+check('best score keeps max, coins accumulate', $r[1]['player']['best_score'] === 97 && $r[1]['player']['coins'] === 5);
 
 // shop
-$pdo = new PDO("sqlite:$db"); $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $pdo->exec("UPDATE players SET coins = 500 WHERE name = 'Alice_1'");
 expect('buy unknown skin', req('POST', 'buy', ['skin' => 'gold'], $tokA), 422, 'unknown_skin');
 expect('buy owned', req('POST', 'buy', ['skin' => 'dune'], $tokA), 409, 'already_owned');
@@ -82,16 +87,16 @@ $r = req('POST', 'equip', ['skin' => 'dune'], $tokA); expect('equip ok', $r, 200
 expect('buy without coins', req('POST', 'buy', ['skin' => 'ember'], $tokB), 422, 'not_enough_coins');
 expect('buy bad field', req('POST', 'buy', ['skin' => 5], $tokA), 400, 'bad_request');
 
-// leaderboard: Alice 10; add Carol 10 (tie), Dave 650, Erin 0
+// leaderboard: Alice 97; add Carol 97 (tie), Dave 650, Erin 0
 $mk = $pdo->prepare("INSERT INTO players(name, token_hash, best_score, created_at) VALUES(?, ?, ?, 0)");
-foreach ([['Carol', 10], ['Dave', 650], ['Erin', 0]] as $i => $p) $mk->execute([$p[0], "h$i", $p[1]]);
+foreach ([['Carol', 97], ['Dave', 650], ['Erin', 0]] as $i => $p) $mk->execute([$p[0], "h$i", $p[1]]);
 $r = req('GET', 'leaderboard'); expect('leaderboard anon', $r, 200);
 check('order + ranks + levels', $r[1]['top'] === [
   ['rank' => 1, 'name' => 'Dave', 'best_score' => 650, 'best_level' => 3],
-  ['rank' => 2, 'name' => 'Alice_1', 'best_score' => 10, 'best_level' => 1],
-  ['rank' => 2, 'name' => 'Carol', 'best_score' => 10, 'best_level' => 1]]);
+  ['rank' => 2, 'name' => 'Alice_1', 'best_score' => 97, 'best_level' => 1],
+  ['rank' => 2, 'name' => 'Carol', 'best_score' => 97, 'best_level' => 1]]);
 check('me null when anon', $r[1]['me'] === null);
-$r = req('GET', 'leaderboard', null, $tokA); check('me present', $r[1]['me'] === ['rank' => 2, 'name' => 'Alice_1', 'best_score' => 10, 'best_level' => 1]);
+$r = req('GET', 'leaderboard', null, $tokA); check('me present', $r[1]['me'] === ['rank' => 2, 'name' => 'Alice_1', 'best_score' => 97, 'best_level' => 1]);
 $r = req('GET', 'leaderboard', null, $tokB); check('me null at zero score', $r[1]['me'] === null);
 $r = req('GET', 'leaderboard', null, 'badtoken'); expect('leaderboard ignores bad token', $r, 200); check('me null bad token', $r[1]['me'] === null);
 expect('leaderboard wrong method', req('POST', 'leaderboard'), 405, 'method_not_allowed');
@@ -100,11 +105,17 @@ expect('leaderboard wrong method', req('POST', 'leaderboard'), 405, 'method_not_
 for ($i = 0; $i < 25; $i++) $mk->execute(["P$i", "x$i", 1000 + $i]);
 check('top capped at 20', count(req('GET', 'leaderboard')[1]['top']) === 20);
 
-// stale unfinished runs are purged on run_start
+// run_start keeps the 2 newest unfinished runs and purges finished runs older than a day
 $pid = $pdo->query("SELECT id FROM players WHERE name = 'Bob_2'")->fetchColumn();
-$pdo->prepare("INSERT INTO runs(id, player_id, started_at) VALUES('stale', ?, ?)")->execute([$pid, microtime(true) - 90000]);
-req('POST', 'run_start', null, $tokB);
-check('stale run deleted', (int)$pdo->query("SELECT COUNT(*) FROM runs WHERE id = 'stale'")->fetchColumn() === 0);
+$ins = $pdo->prepare('INSERT INTO runs(id, player_id, started_at, finished_at) VALUES(?, ?, ?, ?)');
+$ins->execute(['oldfin', $pid, microtime(true) - 90100, microtime(true) - 90000]); $ins->execute(['newfin', $pid, microtime(true) - 100, microtime(true) - 50]);
+$b1 = req('POST', 'run_start', null, $tokB)[1]['run_id']; $b2 = req('POST', 'run_start', null, $tokB)[1]['run_id']; $b3 = req('POST', 'run_start', null, $tokB)[1]['run_id'];
+$open = $pdo->prepare('SELECT id FROM runs WHERE player_id = ? AND finished_at IS NULL ORDER BY id'); $open->execute([$pid]); $open = $open->fetchAll(PDO::FETCH_COLUMN);
+$want = [$b2, $b3]; sort($want);
+check('only 2 newest unfinished runs kept', $open === $want);
+expect('evicted run is gone', req('POST', 'run_finish', ['run_id' => $b1, 'score' => 0, 'coins' => 0], $tokB), 404, 'run_not_found');
+check('old finished run purged, recent kept', $pdo->query("SELECT group_concat(id) FROM runs WHERE id IN ('oldfin', 'newfin')")->fetchColumn() === 'newfin');
+check('other players untouched', (int)$pdo->query("SELECT COUNT(*) FROM runs WHERE player_id != $pid")->fetchColumn() > 0);
 
 // server_error: second server whose DB path is a directory (unopenable); body must leak nothing
 $s2 = stream_socket_server('tcp://127.0.0.1:0'); $port2 = (int)substr(strrchr(stream_socket_get_name($s2, false), ':'), 1); fclose($s2);

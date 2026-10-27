@@ -1,7 +1,7 @@
 <?php
 // Bloxrunner API: SQLite via PDO, JSON in/out. See README "Data". PHP 7.4+.
 const SKINS = ['dune' => 0, 'ember' => 100, 'comet' => 250, 'frost' => 400, 'aurora' => 700]; // keep in sync with SKINS in 3d/js/game.js
-header('Content-Type: application/json'); header('Cache-Control: no-store');
+ini_set('display_errors', '0'); header('Content-Type: application/json'); header('Cache-Control: no-store');
 
 function out($data, $status = 200) { http_response_code($status); echo json_encode($data); exit; }
 function fail($code, $status) { out(['error' => $code], $status); }
@@ -9,7 +9,8 @@ set_exception_handler(function ($e) { error_log('bloxrunner: ' . $e); if (!heade
 
 function db() {
   $path = getenv('BLOXRUNNER_DB') ?: dirname(__DIR__, 2) . '/bloxrunner-data/bloxrunner.sqlite';
-  if (!is_dir(dirname($path))) mkdir(dirname($path), 0700, true);
+  $d = dirname($path);
+  if (!is_dir($d) && !@mkdir($d, 0700, true) && !is_dir($d)) throw new RuntimeException('cannot create ' . $d);
   $db = new PDO('sqlite:' . $path, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
   $db->exec('PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL');
   $db->exec("CREATE TABLE IF NOT EXISTS players(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE, token_hash TEXT NOT NULL UNIQUE, coins INTEGER NOT NULL DEFAULT 0 CHECK(coins >= 0), skin TEXT NOT NULL DEFAULT 'dune', best_score INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL);
@@ -66,9 +67,13 @@ if ($action === 'register') {
 if ($action === 'me') out(['player' => player($db, $me['id'])]);
 
 if ($action === 'run_start') {
-  q($db, 'DELETE FROM runs WHERE player_id = ? AND finished_at IS NULL AND started_at < ?', [$me['id'], microtime(true) - 86400]);
-  $id = bin2hex(random_bytes(16));
-  q($db, 'INSERT INTO runs(id, player_id, started_at) VALUES(?, ?, ?)', [$id, $me['id'], microtime(true)]);
+  // ponytail: caps open runs at 2 per player, but a scripted client can still claim up to ~4 coins/s per open run; server-side replay checks if that matters
+  $id = bin2hex(random_bytes(16)); $now = microtime(true);
+  $db->exec('BEGIN IMMEDIATE');
+  q($db, 'DELETE FROM runs WHERE player_id = ? AND finished_at IS NOT NULL AND finished_at < ?', [$me['id'], $now - 86400]);
+  q($db, 'INSERT INTO runs(id, player_id, started_at) VALUES(?, ?, ?)', [$id, $me['id'], $now]);
+  q($db, 'DELETE FROM runs WHERE player_id = ? AND finished_at IS NULL AND id NOT IN (SELECT id FROM runs WHERE player_id = ? AND finished_at IS NULL ORDER BY started_at DESC, rowid DESC LIMIT 2)', [$me['id'], $me['id']]);
+  $db->exec('COMMIT');
   out(['run_id' => $id]);
 }
 
@@ -78,7 +83,7 @@ if ($action === 'run_finish') {
   if (!$run) fail('run_not_found', 404);
   if ($run['finished_at'] !== null) fail('run_finished', 409);
   $now = microtime(true); $elapsed = $now - $run['started_at'];
-  $plausible = $score <= floor($elapsed * 40 / 3) + 10 && $coins <= floor($elapsed * 4) + 4;
+  $plausible = $score <= floor($elapsed * 20) + min(60, floor($elapsed * 10)) && $coins <= floor($elapsed * 4) + min(4, floor($elapsed)); // boost doubles 300/45 per s, +10 per obstacle smashed while boosted
   $db->exec('BEGIN IMMEDIATE');
   if (!q($db, 'UPDATE runs SET finished_at = ?, score = ?, coins = ? WHERE id = ? AND finished_at IS NULL', [$now, $plausible ? $score : null, $plausible ? $coins : null, $rid])->rowCount()) { $db->exec('ROLLBACK'); fail('run_finished', 409); }
   if ($plausible) q($db, 'UPDATE players SET coins = coins + CAST(? AS INTEGER), best_score = max(best_score, CAST(? AS INTEGER)) WHERE id = ?', [$coins, $score, $me['id']]);
