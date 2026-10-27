@@ -32,8 +32,6 @@ button{font:inherit;color:var(--ink);cursor:pointer}
 #menu{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px;width:100%}
 #menu button{pointer-events:auto;width:min(260px,78vw);margin:0;padding:12px 18px;border-radius:14px;border:2px solid var(--sun);background:rgba(28,18,51,.85);font-size:clamp(15px,3.8vw,19px)}
 #menu button.big{background:var(--sun);color:#1c1233;font-weight:bold;font-size:clamp(18px,4.6vw,24px);padding:14px 18px}
-.menu-link{display:block;width:min(260px,78vw);box-sizing:border-box;margin:0;padding:10px 18px;border-radius:14px;border:2px solid rgba(255,179,71,.5);color:#fff4e0;text-decoration:none;font-size:clamp(13px,3.4vw,16px);text-align:center;pointer-events:auto;background:rgba(28,18,51,.7);opacity:.85}
-.menu-link:hover{opacity:1;border-color:var(--sun)}
 #wal{color:var(--sun);font-weight:bold;margin:6px 0 0}
 #wrap.short #ui{padding:8px 12px}
 #wrap.short .brand{gap:1px;margin:0 0 2px}
@@ -43,8 +41,7 @@ button{font:inherit;color:var(--ink);cursor:pointer}
 #wrap.short #ui h1{font-size:clamp(22px,5.5vh,30px);margin:0 0 2px}
 #wrap.short #ui p{margin:2px 0;font-size:clamp(11px,2.8vh,13px);max-width:48ch}
 #wrap.short #menu{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:540px;gap:6px;margin-top:6px}
-#wrap.short #menu button,#wrap.short .menu-link{width:auto;min-width:125px;padding:8px 12px;font-size:14px}
-#wrap.short .menu-link{font-size:13px}
+#wrap.short #menu button{width:auto;min-width:125px;padding:8px 12px;font-size:14px}
 #wrap.short #menu button.big{flex:0 0 100%;max-width:240px;padding:9px 14px;font-size:16px}
 #wrap.narrow #ui{padding:12px}
 #wrap.narrow .card{padding:8px 10px;gap:8px}

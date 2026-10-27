@@ -15,10 +15,15 @@ const SKINS=[
  {id:'aurora',name:'Aurora',cost:700,body:'#b69cff',scarf:'#7cf0c3',perk:'+2 lives. Power: 5s speed boost, recharges in 90s',lives:2,boost:5,slow:0}
 ];
 let save={coins:0,owned:['dune'],skin:'dune'};
-try{const s=JSON.parse(localStorage.getItem('dunedash-save'));if(s&&s.owned)save=s}catch(e){}
-function persist(){try{localStorage.setItem('dunedash-save',JSON.stringify(save))}catch(e){}}
+const API='../api/index.php'; // progress lives on the server (api/index.php); the token identifies this device's player
+let token='',pname='',offline=false,runId=null,runGen=0;try{token=localStorage.getItem('bloxrunner-token')||''}catch(e){}
+function api(action,body){ // Promise of parsed JSON; rejects with Error(server error code) or Error('network')
+  const h=token?{'X-Player-Token':token}:{};if(body!==undefined)h['Content-Type']='application/json';
+  return fetch(API+'?action='+action,{method:body===undefined?'GET':'POST',headers:h,body:body===undefined?undefined:JSON.stringify(body)})
+    .then(r=>r.json().then(j=>{if(!r.ok)throw Error(j.error||'network');return j},()=>{throw Error('network')}),()=>{throw Error('network')});
+}
+function applyPlayer(p){save={coins:p.coins,owned:p.owned,skin:p.skin};best=p.best_score;pname=p.name;offline=false;refreshMenu()}
 const SK=()=>SKINS.find(s=>s.id===save.skin)||SKINS[0];
-try{best=+localStorage.getItem('dunedash-best')||0}catch(e){}
 const P={x:120,y:GY,vy:0,w:34,h:54,ducking:false,onGround:true,holdJump:false,air:0};
 const G=2600,JUMP=-900;
 const stars=Array.from({length:40},()=>({x:Math.random()*W,y:Math.random()*200,s:Math.random()*2+1}));
@@ -30,19 +35,22 @@ function reset(){
   Object.assign(P,{y:GY,vy:0,ducking:false,onGround:true,holdJump:false});
   const br=document.getElementById('brand')||document.getElementById('logo');if(br&&state==='ready'){br.style.display='flex';title.style.display='none'}
 }
-function start(){reset();state='play';ui.classList.add('hide');musicOn()}
+function start(){reset();state='play';ui.classList.add('hide');musicOn();if(pname){runId=null;const g=++runGen;api('run_start',{}).then(r=>{if(g===runGen&&state==='play')runId=r.run_id},()=>{})}}
 function die(){
   state='over';shake=0.3;sfx('die');musicOff();bendT=0;ltnWarn=0;wxWant='normal';wxNext=20;
   const s=Math.floor(score);
-  if(s>best){best=s;try{localStorage.setItem('dunedash-best',best)}catch(e){}}
+  if(s>best)best=s;
   const br=document.getElementById('brand')||document.getElementById('logo');if(br)br.style.display='none';title.style.display='block';
   title.textContent='Game over';playBtn.textContent='▶ Play again';refreshMenu();
-  persist();msg.textContent='Coins +'+runCoins+'  ·  Score '+s+'  ·  Best '+best+'. Tap to run again.';
+  const m='Coins +'+runCoins+'  ·  Score '+s+'  ·  Best '+best+'. Tap to run again.';
+  msg.textContent=m+(!pname?(token?' (not saved)':' Pick a name to save your score.'):runId?'':' (not saved)');
+  const rid=runId,done=()=>{if(runId===rid)runId=null}; // HUD counts runCoins in the wallet until the server has settled the run
+  if(pname&&rid)api('run_finish',{run_id:rid,score:s,coins:runCoins}).then(r=>{done();applyPlayer(r.player);msg.textContent=m+' Rank #'+r.rank},()=>{done();msg.textContent=m+' (not saved)'});
   ui.classList.remove('hide');
   for(let i=0;i<20;i++)parts.push({x:P.x,y:P.y-27,vx:(Math.random()-.5)*500,vy:-Math.random()*500,l:1});
 }
 function jump(){
-  if(shopEl.classList.contains('open')||setEl.classList.contains('open'))return;
+  if(shopEl.classList.contains('open')||setEl.classList.contains('open')||boardEl.classList.contains('open'))return;
   audioInit();
   if(state!=='play'){ if(state==='ready'||state==='over'){ if(state==='over'&&t<0)return; start(); } return;}
   if(ltnWarn>0)ltnDodged=true; // any tap during a lightning warning dodges the bolt
@@ -204,7 +212,7 @@ function update(dt){
     const pb=playerBox();
     coinsList=coinsList.filter(c=>{
       if(c.x<-30)return false;
-      if(overlap(pb,{x:c.x-10,y:c.y-10,w:20,h:20})){runCoins++;save.coins++;sfx('coin');return false}
+      if(overlap(pb,{x:c.x-10,y:c.y-10,w:20,h:20})){runCoins++;sfx('coin');return false}
       return true;
     });
     pups=pups.filter(p=>{
@@ -538,7 +546,7 @@ function draw(){
   ctx.fillText(String(Math.floor(score)).padStart(5,'0'),W-pad,34);
   ctx.globalAlpha=.7;ctx.font=(narHud?14:16)+'px Trebuchet MS, sans-serif';ctx.fillText('Best '+best,W-pad,56);ctx.globalAlpha=1;
   ctx.font='bold '+(narHud?16:18)+'px Trebuchet MS, sans-serif';ctx.textAlign='left';ctx.fillText('LEVEL '+(1+Math.floor(score/300)),pad,34);
-  ctx.fillStyle='#ffd23f';ctx.font='bold '+(narHud?14:16)+'px Trebuchet MS, sans-serif';ctx.fillText('● '+runCoins+'   (wallet '+save.coins+')',pad,56);
+  ctx.fillStyle='#ffd23f';ctx.font='bold '+(narHud?14:16)+'px Trebuchet MS, sans-serif';ctx.fillText('● '+runCoins+'   (wallet '+(save.coins+(state==='play'||runId?runCoins:0))+')',pad,56);
   ctx.fillStyle='#ff4d6d';ctx.font=(narHud?18:20)+'px sans-serif';ctx.fillText('♥'.repeat(lives),pad,80);ctx.fillStyle='#fff4e0';
   ctx.restore();
 }
@@ -583,14 +591,28 @@ function renderSettings(){
   row('Sound effects',tb(cfg.sfx?'On':'Off',cfg.sfx,()=>{cfg.sfx=!cfg.sfx;saveCfg();renderSettings()}));
   row('Display',tb('Window',cfg.mode==='win',()=>setMode('win')),tb('Portrait fullscreen',cfg.mode==='port',()=>setMode('port')),tb('Landscape fullscreen',cfg.mode==='land',()=>setMode('land')));
 }
-function refreshMenu(){document.getElementById('wal').textContent='\u25cf '+save.coins+' coins  \u00b7  skin: '+SK().name}
+function refreshMenu(){document.getElementById('wal').textContent=pname?'\u25cf '+save.coins+' coins  \u00b7  skin: '+SK().name+'\n'+pname:offline?"Offline - progress won't be saved.":token?'':'Pick a name to save coins, skins and scores.'}
+const nameRow=document.getElementById('nameRow'),nameIn=document.getElementById('nameIn'),nameBtn=document.getElementById('nameBtn'),nameErr=document.getElementById('nameErr');
+function showName(on){nameRow.style.display=on?'':'none';if(!on)nameErr.textContent=''}
+function saveName(){
+  if(nameBtn.disabled)return; // one register request at a time (Enter can repeat)
+  nameErr.textContent='';nameBtn.disabled=true;
+  api('register',{name:nameIn.value}).then(r=>{token=r.token;try{localStorage.setItem('bloxrunner-token',token)}catch(e){}nameIn.blur();showName(false);applyPlayer(r.player)},
+    e=>{nameErr.textContent={name_taken:'That name is taken.',invalid_name:'Use 3-16 letters, numbers or _.'}[e.message]||"Can't reach the server. Try again."}).finally(()=>{nameBtn.disabled=false});
+}
+['keydown','keyup'].forEach(k=>nameIn.addEventListener(k,e=>{e.stopPropagation();if(k==='keydown'&&e.key==='Enter')saveName()})); // typing a name must not jump, mute or fire powers
+nameBtn.onclick=()=>{nameBtn.blur();saveName()};
+['keydown','keyup'].forEach(k=>nameBtn.addEventListener(k,e=>e.stopPropagation())); // Space/Enter on the focused button clicks it, not start a run
+showName(!token);
+if(token)api('me').then(r=>applyPlayer(r.player),e=>{if(e.message==='unauthorized'){token='';try{localStorage.removeItem('bloxrunner-token')}catch(x){}showName(true)}else offline=true;refreshMenu()});
 function fit(){
   if(!cfg.userMode){
     const dm=detectMode();
     if(cfg.mode!==dm){cfg.mode=dm;applyMode();if(setEl.classList.contains('open'))renderSettings()}
   }
-  const h=wrapEl.clientHeight||innerHeight,w=wrapEl.clientWidth||innerWidth;
-  wrapEl.classList.toggle('short',h<520);
+  const h=stage.clientHeight||innerHeight,w=stage.clientWidth||innerWidth; // the menu lives on the stage, so size it by the stage
+  wrapEl.style.setProperty('--uh',h+'px');
+  wrapEl.classList.toggle('short',h<520);wrapEl.classList.toggle('mid',h>=520&&h<960);
   wrapEl.classList.toggle('narrow',w<480);
 }
 playBtn.onclick=()=>{audioInit();start()};
@@ -675,26 +697,46 @@ muteBtn.onclick=()=>{audioInit();setMute(!muted);muteBtn.blur()};
 setMute(muted);
 addEventListener('keydown',e=>{if(e.code==='KeyM')setMute(!muted)});
 document.addEventListener('visibilitychange',()=>{if(AC){document.hidden?AC.suspend():AC.resume()}});
-const shopEl=document.getElementById('shop'),cardsEl=document.getElementById('cards');
+const shopEl=document.getElementById('shop'),cardsEl=document.getElementById('cards'),shopMsg=document.getElementById('shopMsg');
 let shopMode='shop';
 function renderShop(){
   document.getElementById('shopTitle').textContent=shopMode==='shop'?'Skin shop':'My skins';
   document.getElementById('bal').textContent='● '+save.coins;
-  cardsEl.innerHTML='';refreshMenu();
+  cardsEl.innerHTML='';shopMsg.textContent='';refreshMenu();
   SKINS.filter(s=>shopMode==='shop'||save.owned.includes(s.id)).forEach(s=>{
     const own=save.owned.includes(s.id),on=save.skin===s.id;
     const d=document.createElement('div');d.className='card'+(on?' on':'');
     d.innerHTML='<div class="sw" style="background:'+s.body+'"><i style="background:'+s.scarf+'"></i></div><div class="t"><b>'+s.name+'</b><small>'+s.perk+'</small></div>';
     const b=document.createElement('button');
     if(on){b.textContent='Equipped';b.disabled=true}
-    else if(own){b.textContent='Equip';b.onclick=()=>{save.skin=s.id;persist();renderShop()}}
-    else{b.textContent='● '+s.cost;b.disabled=save.coins<s.cost;b.onclick=()=>{if(save.coins>=s.cost){save.coins-=s.cost;save.owned.push(s.id);save.skin=s.id;persist();renderShop()}}}
+    else if(own){b.textContent='Equip';b.disabled=!pname;b.onclick=()=>shopCall(b,'equip',s.id)}
+    else{b.textContent='● '+s.cost;b.disabled=!pname||save.coins<s.cost;b.onclick=()=>shopCall(b,'buy',s.id)}
     d.appendChild(b);cardsEl.appendChild(d);
   });
+}
+function shopCall(b,action,skin){
+  b.disabled=true;shopMsg.textContent='';
+  api(action,{skin}).then(r=>{applyPlayer(r.player);renderShop()},e=>{b.disabled=false;shopMsg.textContent=e.message==='not_enough_coins'?'Not enough coins.':"Can't reach the server. Try again."});
 }
 const shopBtn=document.getElementById('shopBtn');
 shopBtn.addEventListener('pointerdown',e=>e.stopPropagation());
 shopBtn.onclick=()=>{shopBtn.blur();shopMode='shop';renderShop();shopEl.classList.add('open')};
+const boardEl=document.getElementById('board'),rowsEl=document.getElementById('rows'),boardBtn=document.getElementById('boardBtn');
+function boardRow(r,me){const d=document.createElement('div');d.className='card'+(me?' on':'');
+  [['rk','#'+r.rank],['nm',r.name],['',r.best_score],['lv','L'+r.best_level]].forEach(([c,t],i)=>{const e=document.createElement(i==2?'b':i==3?'small':'span');e.className=c;e.textContent=t;d.appendChild(e)});rowsEl.appendChild(d)}
+function renderBoard(){
+  const note=t=>{rowsEl.innerHTML='';const p=document.createElement('p');p.textContent=t;rowsEl.appendChild(p)};
+  note('Loading...');
+  api('leaderboard').then(r=>{
+    if(!boardEl.classList.contains('open'))return;
+    if(!r.top.length)return note('No scores yet. Be the first!');
+    rowsEl.innerHTML='';r.top.forEach(x=>boardRow(x,pname&&x.name.toLowerCase()===pname.toLowerCase()));
+    if(r.me&&!r.top.some(x=>x.name.toLowerCase()===r.me.name.toLowerCase())){const p=document.createElement('p');p.textContent='...';rowsEl.appendChild(p);boardRow(r.me,true)}
+  },()=>boardEl.classList.contains('open')&&note("Can't load the leaderboard."));
+}
+boardBtn.addEventListener('pointerdown',e=>e.stopPropagation());
+boardBtn.onclick=()=>{boardBtn.blur();boardEl.classList.add('open');renderBoard()};
+document.getElementById('boardBack').onclick=e=>{e.currentTarget.blur();boardEl.classList.remove('open')};
 document.getElementById('back').onclick=e=>{e.currentTarget.blur();shopEl.classList.remove('open')};
 let last=performance.now();
 function loop(now){

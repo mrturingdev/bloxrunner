@@ -6,4 +6,4 @@ deployment:
     - export DEPLOYPATH=$HOME/bloxrunner.mrturingdev.com/
     - /bin/mkdir -p "$DEPLOYPATH"
     - /bin/rm -f "$DEPLOYPATH/index.html"
-    - /bin/cp -Rf .htaccess index.php launchgame.html logo 2d 3d admin "$DEPLOYPATH"
+    - /bin/cp -Rf .htaccess index.php launchgame.html logo api 2d 3d admin "$DEPLOYPATH"

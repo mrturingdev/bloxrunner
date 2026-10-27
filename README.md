@@ -7,6 +7,7 @@ bloxrunner/
 ├── index.php         PHP entrypoint
 ├── launchgame.html   launcher page
 ├── README.md
+├── api/              PHP + SQLite API for the 3D build
 ├── logo/             logo and icon (PNG + SVG)
 ├── 2d/               original 2D version (canvas only, works offline)
 ├── 3d/               the main game (three.js)
@@ -35,14 +36,23 @@ The 3D and admin versions load three.js r128 from cdnjs.cloudflare.com, so they 
 - Window, portrait-fullscreen and landscape-fullscreen modes; music and sound effects are synthesized in the browser.
 
 ## Notes
-- Progress (coins, skins, settings, best score) is saved in localStorage. The admin build uses separate keys.
+- The 3D build keeps player name, coins, skins, best score and the leaderboard on the server (see Data). The 2D and admin builds save progress in localStorage with their own keys.
 - In the 3D builds the 2D canvas is only the HUD drawn over the three.js scene.
 - Game logic and rendering live together in `js/game.js` in each folder.
+
+## Data
+- The 3D build talks to `api/index.php` (PHP 7.4+ with pdo_sqlite). The SQLite file is `$HOME/bloxrunner-data/bloxrunner.sqlite`, outside the docroot; set `BLOXRUNNER_DB` to use another path.
+- The directory, file and tables are created automatically on the first request. Back up that file (it also has `-wal` and `-shm` siblings while running).
+- A player is a unique name plus a secret device token kept in localStorage (`bloxrunner-token`) and sent as the `X-Player-Token` header.
+- Known limits: run checks are only plausibility caps, so a determined cheater can forge plausible runs (up to ~4 coins/s per open run, at most 2 open runs); registration has no rate limit.
+- Tests: `php tests/api_test.php` (starts its own `php -S` server on a free port with a temp database).
 
 ## Deploy to cPanel
 Static site, no build step. Publish with cPanel's built-in Git Version Control:
 
-1. `.cpanel.yml` deploys to `$HOME/bloxrunner.mrturingdev.com/` — the subdomain's document root.
+Before the first deploy, confirm cPanel > MultiPHP Manager runs PHP 7.4+ with pdo_sqlite for the domain. If `~/bloxrunner-data` cannot be created automatically, create it yourself with `chmod 700`.
+
+1. `.cpanel.yml` deploys to `$HOME/bloxrunner.mrturingdev.com/`, the subdomain's document root.
 2. cPanel > **Git Version Control** > **Create**: clone `https://github.com/mrturingdev/bloxrunner.git` (public repo, no credentials needed).
 3. Tick **Automatic Deployment**, then **Update from Remote** once. Every push to `main` now redeploys to the subdomain.
 

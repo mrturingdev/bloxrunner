@@ -9,28 +9,31 @@
 </head>
 <body>
 <div id="wrap">
-  <div id="stage"><canvas id="gl"></canvas><canvas id="c" width="900" height="450"></canvas></div>
-  <div id="ui">
-    <div class="brand" id="brand">
-      <img src="../logo/bloxrunner-logo.png" id="logo" alt="Bloxrunner">
-      <p class="slogan">Run. Jump. Survive.</p>
-      <p class="byline">by Pranav Maharjan</p>
-    </div>
-    <h1 id="title" style="display:none">Bloxrunner</h1>
-    <p id="msg">Tap, click or press Space to jump. Hold for a higher jump, and tap again in mid-air to double jump. Skins with a power get a button (or press E) that recharges in 90 seconds. Duck with the down arrow. Grab ⚡ to smash through obstacles and ⏳ to slow time.</p>
-    <p id="wal"></p>
-    <div id="menu">
-      <button id="playBtn" class="big">▶ Play</button>
-      <button id="shopBtn">🛒 Skin shop</button>
-      <button id="ownedBtn">🎽 My skins</button>
-      <button id="setBtn">⚙ Settings</button>
-      <a href="../launchgame.html" id="launcherBtn" class="menu-link">🕹️ Other versions</a>
+  <div id="stage"><canvas id="gl"></canvas><canvas id="c" width="900" height="450"></canvas>
+    <div id="ui">
+      <div class="brand" id="brand">
+        <img src="../logo/bloxrunner-logo.png" id="logo" alt="Bloxrunner">
+        <p class="slogan">Run. Jump. Survive.</p>
+        <p class="byline">by Pranav Maharjan</p>
+      </div>
+      <h1 id="title" style="display:none">Bloxrunner</h1>
+      <p id="msg"></p>
+      <p id="wal"></p>
+      <div id="nameRow"><input id="nameIn" aria-label="Player name" maxlength="16" placeholder="Pick a player name" autocomplete="off"><button id="nameBtn">Save name</button></div><p id="nameErr"></p>
+      <div id="menu">
+        <button id="playBtn" class="big">▶ Play</button>
+        <button id="shopBtn">🛒 Skin shop</button>
+        <button id="ownedBtn">🎽 My skins</button>
+        <button id="boardBtn">🏆 Leaderboard</button>
+        <button id="setBtn">⚙ Settings</button>
+      </div>
     </div>
   </div>
   <button id="power" aria-label="Use skin power"></button>
   <button id="mute" aria-label="Toggle sound">🔊</button>
   <div id="settings"><header><h2>Settings</h2></header><div id="setBody"></div><button id="setBack">Back</button></div>
-  <div id="shop"><header><h2 id="shopTitle">Skin shop</h2><span id="bal"></span></header><div id="cards"></div><button id="back">Back</button></div>
+  <div id="board"><header><h2>Leaderboard</h2></header><div id="rows"></div><button id="boardBack">Back</button></div>
+  <div id="shop"><header><h2 id="shopTitle">Skin shop</h2><span id="bal"></span></header><div id="cards"></div><p id="shopMsg"></p><button id="back">Back</button></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/game.js"></script>
