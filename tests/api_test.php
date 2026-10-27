@@ -106,5 +106,14 @@ $pdo->prepare("INSERT INTO runs(id, player_id, started_at) VALUES('stale', ?, ?)
 req('POST', 'run_start', null, $tokB);
 check('stale run deleted', (int)$pdo->query("SELECT COUNT(*) FROM runs WHERE id = 'stale'")->fetchColumn() === 0);
 
+// server_error: second server whose DB path is a directory (unopenable); body must leak nothing
+$s2 = stream_socket_server('tcp://127.0.0.1:0'); $port2 = (int)substr(strrchr(stream_socket_get_name($s2, false), ':'), 1); fclose($s2);
+$proc2 = proc_open([PHP_BINARY, '-S', "127.0.0.1:$port2", '-t', $root], [['pipe', 'r'], ['file', '/dev/null', 'w'], ['file', '/dev/null', 'w']], $p2, $root, array_merge($_ENV, ['BLOXRUNNER_DB' => sys_get_temp_dir()]) + ['PATH' => getenv('PATH')]);
+for ($i = 0, $up2 = false; $i < 100 && !$up2; $i++) { $up2 = @fsockopen('127.0.0.1', $port2); if (!$up2) usleep(100000); }
+$body500 = @file_get_contents("http://127.0.0.1:$port2/api/index.php?action=leaderboard", false, stream_context_create(['http' => ['ignore_errors' => true]]));
+check('server_error status 500', isset($http_response_header[0]) && strpos($http_response_header[0], ' 500') !== false);
+check('server_error body leaks nothing (got ' . json_encode($body500) . ')', trim((string)$body500) === '{"error":"server_error"}');
+proc_terminate($proc2);
+
 echo $fail ? "FAILED: $fail failed, $pass passed\n" : "OK: $pass passed\n";
 exit($fail ? 1 : 0);
