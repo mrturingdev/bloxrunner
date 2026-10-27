@@ -7,6 +7,7 @@ bloxrunner/
 ├── index.php         PHP entrypoint
 ├── launchgame.html   launcher page
 ├── README.md
+├── api/              PHP + SQLite API for the 3D build
 ├── logo/             logo and icon (PNG + SVG)
 ├── 2d/               original 2D version (canvas only, works offline)
 ├── 3d/               the main game (three.js)
@@ -35,9 +36,15 @@ The 3D and admin versions load three.js r128 from cdnjs.cloudflare.com, so they 
 - Window, portrait-fullscreen and landscape-fullscreen modes; music and sound effects are synthesized in the browser.
 
 ## Notes
-- Progress (coins, skins, settings, best score) is saved in localStorage. The admin build uses separate keys.
+- The 3D build keeps player name, coins, skins, best score and the leaderboard on the server (see Data). The 2D and admin builds save progress in localStorage with their own keys.
 - In the 3D builds the 2D canvas is only the HUD drawn over the three.js scene.
 - Game logic and rendering live together in `js/game.js` in each folder.
+
+## Data
+- The 3D build talks to `api/index.php` (PHP 7.4+ with pdo_sqlite). The SQLite file is `$HOME/bloxrunner-data/bloxrunner.sqlite`, outside the docroot; set `BLOXRUNNER_DB` to use another path.
+- The directory, file and tables are created automatically on the first request. Back up that file (it also has `-wal` and `-shm` siblings while running).
+- A player is a unique name plus a secret device token kept in localStorage (`bloxrunner-token`) and sent as the `X-Player-Token` header.
+- Tests: `php tests/api_test.php` (starts its own `php -S` server on a free port with a temp database).
 
 ## Deploy to cPanel
 Static site, no build step. Publish with cPanel's built-in Git Version Control:
