@@ -6,7 +6,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 html,body{width:100%;height:100%;height:100dvh;margin:0;background:var(--ground);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",sans-serif;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
 #stage{position:relative;width:min(100%,900px,calc(100dvh * 2));max-width:900px;max-height:100%;aspect-ratio:2/1;background:linear-gradient(180deg,var(--sk1,#2b1b4d) 0%,var(--sk2,#8a3a64) 38%,var(--sk2,#8a3a64) 100%)}#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-#ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:16px;box-sizing:border-box;overflow-y:auto;max-height:100%}
+#ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-content:safe center;text-align:center;pointer-events:none;padding:16px;box-sizing:border-box;overflow-y:auto;max-height:100%}
 .brand{display:flex;flex-direction:column;align-items:center;gap:3px;margin:0 0 6px;text-align:center}
 #logo{width:min(300px,68vw);max-height:18vh;object-fit:contain;height:auto;pointer-events:none}
 .slogan{margin:0;font-size:clamp(12px,3.2vw,15px);font-weight:bold;letter-spacing:1.8px;text-transform:uppercase;color:#ffb347}
@@ -35,6 +35,17 @@ button{font:inherit;color:var(--ink);cursor:pointer}
 .menu-link{display:block;width:min(260px,78vw);box-sizing:border-box;margin:0;padding:10px 18px;border-radius:14px;border:2px solid rgba(255,179,71,.5);color:#fff4e0;text-decoration:none;font-size:clamp(13px,3.4vw,16px);text-align:center;pointer-events:auto;background:rgba(28,18,51,.7);opacity:.85}
 .menu-link:hover{opacity:1;border-color:var(--sun)}
 #wal{color:var(--sun);font-weight:bold;margin:6px 0 0}
+#nameRow{pointer-events:auto;display:flex;gap:6px;width:min(260px,78vw);margin-top:8px}
+#nameIn{flex:1;min-width:0;font:inherit;font-size:16px;color:var(--ink);padding:8px 10px;border-radius:8px;border:2px solid var(--sun);background:rgba(28,18,51,.85);outline:none;-webkit-user-select:text;user-select:text}
+#nameIn::placeholder{color:var(--ink);opacity:.55;font-size:14px}
+#nameIn:focus{box-shadow:0 0 0 2px rgba(255,179,71,.4)}
+#nameBtn{flex:none;padding:8px 12px;font-size:15px;border-radius:8px;border:0;background:var(--sun);color:#1c1233;font-weight:bold}
+#nameBtn:disabled{opacity:.4;cursor:default}
+#ui #nameErr{color:var(--hit);font-weight:bold;font-size:clamp(12px,3vw,15px)}
+#nameErr:empty,#shopMsg:empty{display:none}
+#shopMsg{max-width:700px;width:100%;margin:10px auto 0;text-align:center;color:var(--hit);font-weight:bold}
+#wrap.short #nameRow{margin-top:4px}
+#wrap.short #nameIn,#wrap.short #nameBtn{padding:6px 10px}
 #wrap.short #ui{padding:8px 12px}
 #wrap.short .brand{gap:1px;margin:0 0 2px}
 #wrap.short #logo{width:min(160px,36vw);max-height:10vh}
@@ -66,3 +77,4 @@ button{font:inherit;color:var(--ink);cursor:pointer}
 #power.rdy{box-shadow:0 0 14px 3px rgba(255,210,63,.7)}
 #mute{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:6;width:42px;height:42px;border-radius:50%;border:2px solid var(--sun);background:rgba(28,18,51,.8);font-size:20px;padding:0}
 #back,#setBack{max-width:700px;width:100%;margin:10px auto 0;padding:12px;border-radius:10px;border:2px solid var(--sun);background:none}
+#wrap:has(#shop.open,#settings.open) #mute{display:none} /* it would sit on top of the Back button */
