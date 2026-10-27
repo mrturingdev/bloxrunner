@@ -16,7 +16,7 @@ const SKINS=[
 ];
 let save={coins:0,owned:['dune'],skin:'dune'};
 const API='../api/index.php'; // progress lives on the server (api/index.php); the token identifies this device's player
-let token='',pname='',offline=false,runId=null;try{token=localStorage.getItem('bloxrunner-token')||''}catch(e){}
+let token='',pname='',offline=false,runId=null,runGen=0;try{token=localStorage.getItem('bloxrunner-token')||''}catch(e){}
 function api(action,body){ // Promise of parsed JSON; rejects with Error(server error code) or Error('network')
   const h=token?{'X-Player-Token':token}:{};if(body!==undefined)h['Content-Type']='application/json';
   return fetch(API+'?action='+action,{method:body===undefined?'GET':'POST',headers:h,body:body===undefined?undefined:JSON.stringify(body)})
@@ -35,7 +35,7 @@ function reset(){
   Object.assign(P,{y:GY,vy:0,ducking:false,onGround:true,holdJump:false});
   const br=document.getElementById('brand')||document.getElementById('logo');if(br&&state==='ready'){br.style.display='flex';title.style.display='none'}
 }
-function start(){reset();state='play';ui.classList.add('hide');musicOn();if(pname){runId=null;api('run_start',{}).then(r=>{runId=r.run_id},()=>{})}}
+function start(){reset();state='play';ui.classList.add('hide');musicOn();if(pname){runId=null;const g=++runGen;api('run_start',{}).then(r=>{if(g===runGen&&state==='play')runId=r.run_id},()=>{})}}
 function die(){
   state='over';shake=0.3;sfx('die');musicOff();bendT=0;ltnWarn=0;wxWant='normal';wxNext=20;
   const s=Math.floor(score);
@@ -595,6 +595,7 @@ function refreshMenu(){document.getElementById('wal').textContent=pname?'\u25cf 
 const nameRow=document.getElementById('nameRow'),nameIn=document.getElementById('nameIn'),nameBtn=document.getElementById('nameBtn'),nameErr=document.getElementById('nameErr');
 function showName(on){nameRow.style.display=on?'':'none';if(!on)nameErr.textContent=''}
 function saveName(){
+  if(nameBtn.disabled)return; // one register request at a time (Enter can repeat)
   nameErr.textContent='';nameBtn.disabled=true;
   api('register',{name:nameIn.value}).then(r=>{token=r.token;try{localStorage.setItem('bloxrunner-token',token)}catch(e){}nameIn.blur();showName(false);applyPlayer(r.player)},
     e=>{nameErr.textContent={name_taken:'That name is taken.',invalid_name:'Use 3-16 letters, numbers or _.'}[e.message]||"Can't reach the server. Try again."}).finally(()=>{nameBtn.disabled=false});
@@ -609,7 +610,7 @@ function fit(){
     if(cfg.mode!==dm){cfg.mode=dm;applyMode();if(setEl.classList.contains('open'))renderSettings()}
   }
   const h=wrapEl.clientHeight||innerHeight,w=wrapEl.clientWidth||innerWidth;
-  wrapEl.classList.toggle('short',h<520);
+  wrapEl.classList.toggle('short',h<520);wrapEl.classList.toggle('mid',h>=520&&h<960);
   wrapEl.classList.toggle('narrow',w<480);
 }
 playBtn.onclick=()=>{audioInit();start()};

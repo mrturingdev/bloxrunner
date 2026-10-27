@@ -46,6 +46,14 @@ button{font:inherit;color:var(--ink);cursor:pointer}
 #shopMsg{max-width:700px;width:100%;margin:10px auto 0;text-align:center;color:var(--hit);font-weight:bold}
 #wrap.short #nameRow{margin-top:4px}
 #wrap.short #nameIn,#wrap.short #nameBtn{padding:6px 10px}
+#wrap.mid .brand{gap:2px;margin:0 0 4px}
+#wrap.mid #logo{max-height:11vh}
+#wrap.mid #ui h1{font-size:clamp(28px,7vw,46px);margin:0 0 4px}
+#wrap.mid #ui p{font-size:clamp(13px,3.4vw,15px);max-width:46ch;line-height:1.35}
+#wrap.mid #menu{gap:6px;margin-top:8px}
+#wrap.mid #menu button{padding:9px 18px;font-size:clamp(15px,3.8vw,17px)}
+#wrap.mid #menu button.big{padding:10px 18px;font-size:clamp(18px,4.6vw,21px)}
+#wrap.mid .menu-link{padding:8px 18px}
 #wrap.short #ui{padding:8px 12px}
 #wrap.short .brand{gap:1px;margin:0 0 2px}
 #wrap.short #logo{width:min(160px,36vw);max-height:10vh}
