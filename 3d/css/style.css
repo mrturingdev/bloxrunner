@@ -12,6 +12,7 @@ html,body{width:100%;height:100%;height:100dvh;margin:0;background:var(--ground)
 .slogan{margin:0;font-size:clamp(12px,3.2vw,15px);font-weight:bold;letter-spacing:1.8px;text-transform:uppercase;color:#ffb347}
 .byline{margin:0;font-size:clamp(11px,2.6vw,13px);color:#ffd23f;opacity:.95;font-weight:600;letter-spacing:.5px}
 #ui h1{font-size:clamp(28px,7vw,64px);margin:0 0 8px;letter-spacing:1px}
+#ui p:empty{display:none}
 #ui p{text-shadow:0 1px 3px rgba(28,18,51,.55);margin:4px 0;font-size:clamp(13px,3.4vw,20px);max-width:34ch;line-height:1.4}
 #ui.hide{display:none}
 button{font:inherit;color:var(--ink);cursor:pointer}
@@ -32,11 +33,9 @@ button{font:inherit;color:var(--ink);cursor:pointer}
 .card button{padding:8px 14px;border-radius:8px;border:0;background:var(--sun);color:#1c1233;font-weight:bold;flex:none}
 .card button:disabled{opacity:.4;cursor:default}
 #menu{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px;width:100%}
-#menu button,.menu-link{line-height:1.25} /* emoji glyphs must not change the button height */
+#menu button{line-height:1.25} /* emoji glyphs must not change the button height */
 #menu button{pointer-events:auto;width:min(260px,78vw);margin:0;padding:12px 18px;border-radius:14px;border:2px solid var(--sun);background:rgba(28,18,51,.85);font-size:clamp(15px,3.8vw,19px)}
 #menu button.big{background:var(--sun);color:#1c1233;font-weight:bold;font-size:clamp(18px,4.6vw,24px);padding:14px 18px}
-.menu-link{display:block;width:min(260px,78vw);box-sizing:border-box;margin:0;padding:10px 18px;border-radius:14px;border:2px solid rgba(255,179,71,.5);color:#fff4e0;text-decoration:none;font-size:clamp(13px,3.4vw,16px);text-align:center;pointer-events:auto;background:rgba(28,18,51,.7);opacity:.85}
-.menu-link:hover{opacity:1;border-color:var(--sun)}
 #wal{color:var(--sun);font-weight:bold;margin:6px 0 0}
 #wrap #ui #wal{white-space:pre-line;max-width:none} /* registered: the player name gets its own line, so the wallet never wraps mid-line */
 #nameRow{pointer-events:auto;display:flex;gap:6px;width:min(260px,78vw);margin-top:8px}
@@ -57,7 +56,6 @@ button{font:inherit;color:var(--ink);cursor:pointer}
 #wrap.mid #menu{gap:6px;margin-top:8px}
 #wrap.mid #menu button{padding:9px 18px;font-size:clamp(15px,3.8vw,17px)}
 #wrap.mid #menu button.big{padding:10px 18px;font-size:clamp(18px,4.6vw,21px)}
-#wrap.mid .menu-link{padding:8px 18px}
 #wrap.short #ui{padding:8px 12px}
 #wrap.short .brand{gap:1px;margin:0 0 2px}
 #wrap.short #logo{width:min(160px,36vw);max-height:calc(var(--uh,100vh)*.13)}
@@ -66,8 +64,7 @@ button{font:inherit;color:var(--ink);cursor:pointer}
 #wrap.short #ui h1{font-size:clamp(22px,calc(var(--uh,100vh)*.055),30px);margin:0 0 2px}
 #wrap.short #ui p{margin:2px 0;font-size:clamp(11px,calc(var(--uh,100vh)*.028),13px);max-width:48ch}
 #wrap.short #menu{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:540px;gap:6px;margin-top:6px}
-#wrap.short #menu button,#wrap.short .menu-link{width:auto;min-width:125px;padding:8px 12px;font-size:14px}
-#wrap.short .menu-link{font-size:13px}
+#wrap.short #menu button{width:auto;min-width:125px;padding:8px 12px;font-size:14px}
 #wrap.short #menu button.big{flex:0 0 100%;max-width:240px;padding:9px 14px;font-size:16px}
 #wrap.narrow #ui{padding:12px}
 #wrap.narrow .card{padding:8px 10px;gap:8px}
