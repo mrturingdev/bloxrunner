@@ -1,0 +1,28 @@
+name: Sync Config to Kirtipur Map
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_token:
+        description: 'GitHub Token with repo scope'
+        required: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copy secrets to kirtipur-map
+        env:
+          GH_TOKEN: ${{ github.event.inputs.target_token }}
+          C_HOST: ${{ secrets.CPANEL_HOST }}
+          C_USER: ${{ secrets.CPANEL_USER }}
+          C_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+          C_PORT: ${{ secrets.CPANEL_PORT || '2083' }}
+        run: |
+          echo "Setting secrets on mrturingdev/kirtipur-map..."
+          gh secret set CPANEL_HOST -b "$C_HOST" -R mrturingdev/kirtipur-map
+          gh secret set CPANEL_USER -b "$C_USER" -R mrturingdev/kirtipur-map
+          gh secret set CPANEL_TOKEN -b "$C_TOKEN" -R mrturingdev/kirtipur-map
+          gh secret set CPANEL_PORT -b "$C_PORT" -R mrturingdev/kirtipur-map
+          gh secret set CPANEL_REPO -b "/home/$C_USER/repositories/kirtipur-map" -R mrturingdev/kirtipur-map
+          echo "Secrets successfully synced to mrturingdev/kirtipur-map!"
